@@ -99,6 +99,26 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Accent Variant */
+.btn-accent {
+  background: linear-gradient(135deg, var(--accent), #a78bfa);
+  color: var(--accent-foreground);
+  font-weight: 600;
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-accent:hover {
+  background: linear-gradient(135deg, #7c3aed, var(--accent));
+  box-shadow: var(--shadow-lg), 0 0 0 4px rgba(139, 92, 246, 0.1);
+  transform: translateY(-2px);
+}
+
+.btn-accent.btn-xl {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  height: 3.5rem;
+}
+
 /* Responsive button width */
 @media (max-width: 639px) {
   .btn-xl {
