@@ -1,0 +1,13 @@
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  margin-bottom: 0.375rem;
+  cursor: pointer;
+}
+
+.label:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}

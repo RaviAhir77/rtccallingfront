@@ -1,7 +1,7 @@
 import React from 'react';
 import './Input.css';
 
-const Input = ({ placeholder, value, onChange, disabled, className, ...props }) => {
+const Input = ({ placeholder, value, onChange, disabled, className, autoFocus, ...props }) => {
   const inputClass = `input ${className || ''} ${disabled ? 'input-disabled' : ''}`;
   
   return (
@@ -12,6 +12,7 @@ const Input = ({ placeholder, value, onChange, disabled, className, ...props }) 
       onChange={onChange}
       disabled={disabled}
       className={inputClass}
+      autoFocus={autoFocus}
       {...props}
     />
   );

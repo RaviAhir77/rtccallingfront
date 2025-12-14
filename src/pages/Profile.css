@@ -1,0 +1,263 @@
+/* Profile Container */
+.profile-container {
+  min-height: 100vh;
+  background-color: var(--background);
+}
+
+/* Header */
+.profile-header {
+  height: 3.5rem;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--card);
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  gap: 1rem;
+}
+
+.header-icon {
+  height: 1.25rem;
+  width: 1.25rem;
+}
+
+.profile-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* Main Content */
+.profile-content {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Common Section Styles */
+.profile-section,
+.preferences-section,
+.safety-section,
+.premium-section {
+  background-color: var(--card);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.section-icon-container {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-lg);
+  background-color: var(--secondary-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-icon-container.accent {
+  background-color: rgba(139, 92, 246, 0.1);
+}
+
+.section-icon-container.accent .section-icon {
+  color: var(--accent);
+}
+
+.section-icon {
+  height: 1.25rem;
+  width: 1.25rem;
+  color: var(--foreground);
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.section-subtitle {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* Profile Section Specific */
+.profile-header-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.avatar-container {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background-color: rgba(59, 130, 246, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-icon {
+  height: 2.5rem;
+  width: 2.5rem;
+  color: var(--primary);
+}
+
+.profile-form {
+  margin-top: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.nickname-input {
+  margin-top: 0.375rem;
+  width: 100%;
+}
+
+.input-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+/* Preferences Section */
+.preferences-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.preference-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.preference-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.preference-icon {
+  height: 1.25rem;
+  width: 1.25rem;
+  color: var(--muted);
+}
+
+.preference-description {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.125rem;
+}
+
+/* Safety Section */
+.safety-description {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.safety-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.safety-item {
+  font-size: 0.875rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.safety-bullet {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background-color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* Premium Section */
+.premium-section {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.premium-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.premium-description {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+/* Save Button */
+.save-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.save-icon {
+  height: 1rem;
+  width: 1rem;
+  margin-right: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .profile-content {
+    padding: 0.75rem;
+  }
+  
+  .profile-section,
+  .preferences-section,
+  .safety-section,
+  .premium-section {
+    padding: 1.25rem;
+  }
+  
+  .profile-header-row {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .preference-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .preference-info {
+    width: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  .profile-content {
+    padding: 2rem 1rem;
+  }
+}
