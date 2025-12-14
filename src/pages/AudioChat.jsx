@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from "react-router-dom";
-import { 
-  Mic, 
-  MicOff, 
-  PhoneOff, 
-  SkipForward, 
-  Send, 
+import {
+  Mic,
+  MicOff,
+  PhoneOff,
+  SkipForward,
+  Send,
   ArrowLeft,
   User,
   Loader2,
@@ -14,44 +14,118 @@ import {
 import Button from '../components/Button';
 import Input from '../components/Input';
 import './AudioChat.css';
+import { useSocket } from '../providers/SocketProvider';
+import useToast from '../hooks/useToast';
+import useWebRTC from '../hooks/useWebRTC';
 
 const AudioChat = () => {
+  const { socket, isConnected: isSocketConnected } = useSocket();
+  const { toast } = useToast();
+
   const [isConnected, setIsConnected] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
-  const startSearch = () => {
-    setIsSearching(true);
-    setTimeout(() => {
+  const [partnerId, setPartnerId] = useState(null);
+  const [sessionId, setSessionId] = useState(null);
+  const [role, setRole] = useState(null);
+
+  // WebRTC Hook (Audio Only)
+  const { localStream, remoteStream } = useWebRTC(partnerId, role === 'initiator', false);
+
+  // Audio Ref for remote stream
+  const remoteAudioRef = useRef(null);
+
+  useEffect(() => {
+    if (remoteAudioRef.current && remoteStream) {
+      remoteAudioRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
+
+  // Toggle Mute
+  useEffect(() => {
+    if (localStream) {
+      localStream.getAudioTracks().forEach(track => track.enabled = !isMuted);
+    }
+  }, [isMuted, localStream]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('match-found', ({ partnerId, role, sessionId }) => {
       setIsSearching(false);
       setIsConnected(true);
-    }, 2000);
+      setPartnerId(partnerId);
+      setSessionId(sessionId);
+      setRole(role);
+      toast({ title: "Connected!", description: "Voice chat started." });
+      console.log(`Matched as ${role} with ${partnerId}`);
+    });
+
+    socket.on('receive-message', ({ message, sender }) => {
+      setMessages(prev => [...prev, { text: message, isOwn: false }]);
+    });
+
+    socket.on('partner-disconnected', () => {
+      setIsConnected(false);
+      setPartnerId(null);
+      setSessionId(null);
+      setRole(null);
+      toast({ title: "Partner disconnected", variant: "destructive" });
+    });
+
+    return () => {
+      socket.off('match-found');
+      socket.off('receive-message');
+      socket.off('partner-disconnected');
+    };
+  }, [socket, toast]);
+
+  const startSearch = () => {
+    if (!isSocketConnected) {
+      toast({ title: "Error", description: "Socket not connected", variant: "destructive" });
+      return;
+    }
+    setIsSearching(true);
+    socket.emit('start-searching', { type: 'audio' });
   };
 
   const skipPartner = () => {
+    socket.emit('skip-partner');
     setIsConnected(false);
+    setPartnerId(null);
+    setSessionId(null);
+    setRole(null);
     setMessages([]);
     startSearch();
   };
 
   const endCall = () => {
+    if (isConnected) {
+      socket.emit('skip-partner');
+    }
     setIsConnected(false);
     setIsSearching(false);
     setMessages([]);
+    setPartnerId(null);
+    setRole(null);
   };
 
   const sendMessage = (e) => {
     e.preventDefault();
-    if (!message.trim()) return;
-    
+    if (!message.trim() || !partnerId) return;
+
     setMessages(prev => [...prev, { text: message, isOwn: true }]);
+
+    socket.emit('send-message', {
+      to: partnerId,
+      message,
+      sessionId
+    });
+
     setMessage("");
-    
-    setTimeout(() => {
-      setMessages(prev => [...prev, { text: "Hey! How are you?", isOwn: false }]);
-    }, 1000);
   };
 
   return (
@@ -122,6 +196,9 @@ const AudioChat = () => {
 
               <p className="status-text">Voice chat in progress...</p>
 
+              {/* Hidden Audio Element for Remote Stream */}
+              <audio ref={remoteAudioRef} autoPlay />
+
               {/* Controls */}
               <div className="audio-controls">
                 <Button
@@ -158,7 +235,7 @@ const AudioChat = () => {
           <div className="chat-header">
             <h2 className="chat-title">Chat</h2>
           </div>
-          
+
           <div className="chat-messages">
             {messages.length === 0 ? (
               <p className="empty-chat">
