@@ -77,6 +77,28 @@
   background-color: var(--muted-light);
 }
 
+/* Connect Variant */
+.btn-connect {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.btn-connect:hover {
+  background-color: #7c3aed;
+  box-shadow: var(--shadow-md);
+}
+
+/* Destructive Variant */
+.btn-destructive {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-destructive:hover {
+  background-color: #dc2626;
+  box-shadow: var(--shadow-md);
+}
+
 /* Responsive button width */
 @media (max-width: 639px) {
   .btn-xl {
