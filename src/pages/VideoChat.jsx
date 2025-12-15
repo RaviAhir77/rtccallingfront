@@ -18,6 +18,7 @@ import './VideoChat.css';
 import { useSocket } from '../providers/SocketProvider';
 import useToast from '../hooks/useToast';
 import useWebRTC from '../hooks/useWebRTC';
+import useLocalMedia from '../hooks/useLocalMedia';
 
 const VideoChat = () => {
   const { socket, isConnected: isSocketConnected } = useSocket();
@@ -36,13 +37,28 @@ const VideoChat = () => {
 
   const [showDebug, setShowDebug] = useState(false);
 
-  // WebRTC Hook
-  const { localStream, remoteStream, connectionState, mediaError, retryMedia } = useWebRTC(partnerId, role === 'initiator', true);
+  // 1. Persistent Local Media Hook
+  const { localStream, mediaError, retryMedia } = useLocalMedia(true);
+
+  // 2. WebRTC Hook (Passes localStream)
+  const { remoteStream, connectionState } = useWebRTC(partnerId, role === 'initiator', localStream);
 
 
   // Video Refs
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+
+  // Navigation Cleanup: Remove from queue if user leaves page
+  useEffect(() => {
+    return () => {
+      // Cleanup: emits 'skip-partner' which handles queue removal and disconnects on backend
+      if (socket) {
+        console.log("Navigating away, cleaning up...");
+        socket.emit('skip-partner');
+      }
+    };
+  }, [socket]);
+
 
   // Helper to safely play video
   const playVideo = async (videoRef, streamName) => {
@@ -311,24 +327,6 @@ const VideoChat = () => {
               )}
             </div>
 
-            {/* Mobile Debug Panel Toggle */}
-            <div className="text-center">
-              <button
-                onClick={() => setShowDebug(!showDebug)}
-                className="text-xs text-muted-foreground underline"
-              >
-                {showDebug ? "Hide Debug Logs" : "Show Debug Logs"}
-              </button>
-              {showDebug && (
-                <div className="mt-2 p-2 bg-black text-green-400 text-xs text-left h-32 overflow-y-auto font-mono rounded border border-gray-700">
-                  <p>Secure Context: {window.isSecureContext ? "Yes" : "No"}</p>
-                  <p>MediaDevices: {navigator.mediaDevices ? "Available" : "Undefined"}</p>
-                  <p>Local Stream: {localStream ? localStream.id : "Null"}</p>
-                  <p>Connection State: {connectionState}</p>
-                  <p>Error: {mediaError || "None"}</p>
-                </div>
-              )}
-            </div>
           </div>
         </div>
 
