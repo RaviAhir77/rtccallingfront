@@ -16,8 +16,11 @@ const useWebRTC = (partnerId, isInitiator, isVideo = true) => {
     const [localStream, setLocalStream] = useState(null);
     const [remoteStream, setRemoteStream] = useState(null);
     const [connectionState, setConnectionState] = useState('new');
+    const [mediaError, setMediaError] = useState(null);
 
     const peerRef = useRef(null);
+    const streamRef = useRef(null); // Ref for cleanup
+    const pendingOfferRef = useRef(null); // Ref to store offer if media isn't ready
 
     // Initialize Peer Connection
     const createPeer = useCallback(() => {
@@ -48,12 +51,94 @@ const useWebRTC = (partnerId, isInitiator, isVideo = true) => {
         return peer;
     }, [partnerId, socket]);
 
+    const startCall = useCallback(async () => {
+        setMediaError(null);
+
+        // Check for Secure Context (HTTPS or localhost)
+        if (!window.isSecureContext) {
+            const errorMsg = "Application is not running in a Secure Context (HTTPS). Camera/Mic access is likely blocked by the browser on this network.";
+            console.error(errorMsg);
+            setMediaError(errorMsg);
+            toast({ title: "Security Error", description: "App must be on HTTPS for mobile camera access.", variant: "destructive", duration: 6000 });
+            return;
+        }
+
+        // Check availability
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            const errorMsg = "navigator.mediaDevices is undefined. This browser does not support WebRTC or is blocking it (likely due to insecure HTTP).";
+            console.error(errorMsg);
+            setMediaError(errorMsg);
+            toast({ title: "Browser Incompatible", description: "Camera API not available.", variant: "destructive" });
+            return;
+        }
+
+        // 1. Create Peer synchronously so it's ready for events
+        const peer = createPeer();
+
+        try {
+            // 2. Get Media
+            console.log("Requesting user media...");
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: isVideo,
+                audio: true
+            });
+
+            console.log("Media stream acquired:", stream.id);
+            streamRef.current = stream;
+            setLocalStream(stream);
+
+            // 3. Add Tracks
+            stream.getTracks().forEach(track => {
+                // Check if sender already exists (unlikely in new peer, but good practice)
+                // peer.addTrack(track, stream);
+                // Standard:
+                peer.addTrack(track, stream);
+            });
+
+            // 4. Handle Pending Offer (for Receiver)
+            if (pendingOfferRef.current && !isInitiator) {
+                console.log("Processing pending offer...");
+                const { sdp, caller } = pendingOfferRef.current;
+                await peer.setRemoteDescription(new RTCSessionDescription(sdp));
+                const answer = await peer.createAnswer();
+                await peer.setLocalDescription(answer);
+                socket.emit('answer', { target: caller, sdp: peer.localDescription });
+                pendingOfferRef.current = null;
+            }
+            // 5. Create Offer (for Initiator)
+            else if (isInitiator) {
+                console.log("Creating offer...");
+                const offer = await peer.createOffer();
+                await peer.setLocalDescription(offer);
+                socket.emit('offer', { target: partnerId, sdp: peer.localDescription });
+            }
+
+        } catch (err) {
+            console.error("Error accessing media devices:", err);
+            let userMsg = `Could not start media: ${err.message}`;
+            if (err.name === 'NotAllowedError') {
+                userMsg = "Permission Denied. Please allow access to camera and microphone.";
+                toast({ title: "Permission Denied", description: "Please allow access to camera and microphone.", variant: "destructive" });
+            } else if (err.name === 'NotFoundError') {
+                userMsg = "No camera or microphone found in this device.";
+                toast({ title: "No Device Found", description: "No camera or microphone found.", variant: "destructive" });
+            } else if (err.name === 'NotReadableError' || err.message?.includes('Starting videoinput failed')) {
+                userMsg = "Hardware Error. Camera/Mic is being used by another app.";
+                toast({ title: "Hardware Error", description: "Camera/Mic is being used by another app.", variant: "destructive" });
+            } else {
+                toast({ title: "Error", description: userMsg, variant: "destructive" });
+            }
+            setMediaError(userMsg);
+        }
+    }, [createPeer, isInitiator, isVideo, partnerId, socket, toast]);
+
     // Start Media & Connection
     useEffect(() => {
         // Cleanup function to stop streams
         const cleanup = () => {
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+                streamRef.current = null;
             }
             if (peerRef.current) {
                 peerRef.current.close();
@@ -61,6 +146,8 @@ const useWebRTC = (partnerId, isInitiator, isVideo = true) => {
             }
             setLocalStream(null);
             setRemoteStream(null);
+            pendingOfferRef.current = null;
+            setMediaError(null);
         };
 
         if (!partnerId) {
@@ -68,54 +155,33 @@ const useWebRTC = (partnerId, isInitiator, isVideo = true) => {
             return;
         }
 
-        const startCall = async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: isVideo,
-                    audio: true
-                });
-                setLocalStream(stream);
-
-                const peer = createPeer();
-                stream.getTracks().forEach(track => peer.addTrack(track, stream));
-
-                if (isInitiator) {
-                    const offer = await peer.createOffer();
-                    await peer.setLocalDescription(offer);
-                    socket.emit('offer', { target: partnerId, sdp: peer.localDescription });
-                }
-            } catch (err) {
-                console.error("Error accessing media devices:", err);
-                if (err.name === 'NotAllowedError') {
-                    toast({ title: "Permission Denied", description: "Please allow access to camera and microphone.", variant: "destructive" });
-                } else if (err.name === 'NotFoundError') {
-                    toast({ title: "No Device Found", description: "No camera or microphone found.", variant: "destructive" });
-                } else if (err.name === 'NotReadableError' || err.message.includes('Starting videoinput failed')) {
-                    toast({ title: "Hardware Error", description: "Camera/Mic is being used by another app (or browser tab).", variant: "destructive" });
-                } else {
-                    toast({ title: "Error", description: "Could not start media stream.", variant: "destructive" });
-                }
-            }
-        };
-
         startCall();
 
         return cleanup;
-    }, [partnerId, isInitiator, isVideo, createPeer, socket, toast]);
+    }, [partnerId, startCall]);
 
     // Handle Signaling Events
     useEffect(() => {
-        if (!socket || !peerRef.current) return;
+        if (!socket) return;
 
         const handleOffer = async ({ sdp, caller }) => {
             if (!isInitiator) { // Only receiver handles offer
                 const peer = peerRef.current;
-                if (!peer) return;
 
-                await peer.setRemoteDescription(new RTCSessionDescription(sdp));
-                const answer = await peer.createAnswer();
-                await peer.setLocalDescription(answer);
-                socket.emit('answer', { target: caller, sdp: peer.localDescription });
+                // If peer is not ready or media not added, queue it?
+                // Actually peerRef.current should be set if startCall ran synchronously part.
+                // But stream might not be ready.
+
+                if (peer && streamRef.current) {
+                    console.log("Handling offer immediately");
+                    await peer.setRemoteDescription(new RTCSessionDescription(sdp));
+                    const answer = await peer.createAnswer();
+                    await peer.setLocalDescription(answer);
+                    socket.emit('answer', { target: caller, sdp: peer.localDescription });
+                } else {
+                    console.log("Queuing offer until media is ready");
+                    pendingOfferRef.current = { sdp, caller };
+                }
             }
         };
 
@@ -123,6 +189,7 @@ const useWebRTC = (partnerId, isInitiator, isVideo = true) => {
             if (isInitiator) { // Only initiator handles answer
                 const peer = peerRef.current;
                 if (peer) {
+                    console.log("Handling answer");
                     await peer.setRemoteDescription(new RTCSessionDescription(sdp));
                 }
             }
@@ -131,7 +198,11 @@ const useWebRTC = (partnerId, isInitiator, isVideo = true) => {
         const handleIceCandidate = async ({ candidate }) => {
             const peer = peerRef.current;
             if (peer) {
-                await peer.addIceCandidate(new RTCIceCandidate(candidate));
+                try {
+                    await peer.addIceCandidate(new RTCIceCandidate(candidate));
+                } catch (e) {
+                    console.error("Error adding ice candidate", e);
+                }
             }
         };
 
@@ -144,9 +215,9 @@ const useWebRTC = (partnerId, isInitiator, isVideo = true) => {
             socket.off('answer');
             socket.off('ice-candidate');
         };
-    }, [socket, isInitiator, partnerId]);
+    }, [socket, isInitiator, partnerId, startCall]); // startCall dependency is stable (useCallback)
 
-    return { localStream, remoteStream, connectionState };
+    return { localStream, remoteStream, connectionState, mediaError, retryMedia: startCall };
 };
 
 export default useWebRTC;

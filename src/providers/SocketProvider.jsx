@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
+import config from '../config.json';
 
 const SocketContext = createContext();
 
@@ -26,7 +27,7 @@ export const SocketProvider = ({ children }) => {
 
         // 2. Connect
         // Replace with your actual backend URL in production
-        const BACKEND_URL = 'http://localhost:5000';
+        const BACKEND_URL = config.BACKEND_URL;
 
         if (!socketRef.current) {
             socketRef.current = io(BACKEND_URL, {

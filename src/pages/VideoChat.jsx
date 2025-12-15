@@ -34,22 +34,39 @@ const VideoChat = () => {
   const [sessionId, setSessionId] = useState(null);
   const [role, setRole] = useState(null);
 
+  const [showDebug, setShowDebug] = useState(false);
+
   // WebRTC Hook
-  const { localStream, remoteStream } = useWebRTC(partnerId, role === 'initiator', true);
+  const { localStream, remoteStream, connectionState, mediaError, retryMedia } = useWebRTC(partnerId, role === 'initiator', true);
+
 
   // Video Refs
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
 
+  // Helper to safely play video
+  const playVideo = async (videoRef, streamName) => {
+    if (videoRef.current) {
+      try {
+        await videoRef.current.play();
+        console.log(`${streamName} video is playing`);
+      } catch (err) {
+        console.error(`Error playing ${streamName} video:`, err);
+      }
+    }
+  };
+
   useEffect(() => {
     if (localVideoRef.current && localStream) {
       localVideoRef.current.srcObject = localStream;
+      playVideo(localVideoRef, "Local");
     }
   }, [localStream]);
 
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
+      playVideo(remoteVideoRef, "Remote");
     }
   }, [remoteStream]);
 
@@ -72,7 +89,6 @@ const VideoChat = () => {
       setRole(role);
       toast({ title: "Connected!", description: "You are now chatting with a stranger." });
 
-      // Initialize WebRTC here based on role
       console.log(`Matched as ${role} with ${partnerId}`);
     });
 
@@ -86,7 +102,6 @@ const VideoChat = () => {
       setSessionId(null);
       setRole(null);
       toast({ title: "Partner disconnected", variant: "destructive" });
-      // Optionally auto-search again?
     });
 
     return () => {
@@ -102,6 +117,9 @@ const VideoChat = () => {
       return;
     }
     setIsSearching(true);
+    // Ensure cleanup of previous state if any
+    setPartnerId(null);
+    setRole(null);
     socket.emit('start-searching', { type: 'video' });
   };
 
@@ -120,9 +138,6 @@ const VideoChat = () => {
     if (isConnected) { // Only emit skip (disconnect) if actually connected
       socket.emit('skip-partner');
     }
-    // If just searching, we might want to tell backend to remove from queue, 
-    // but current backend implementation handles disconnect/skip logic generically.
-    // Ideally add a 'cancel-search' event later. For now, skip works or just navigating away.
     setIsConnected(false);
     setIsSearching(false);
     setMessages([]);
@@ -197,6 +212,7 @@ const VideoChat = () => {
                       autoPlay
                       playsInline
                       className="video-element"
+                      onLoadedMetadata={() => playVideo(remoteVideoRef, "Remote")}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                   ) : (
@@ -221,9 +237,28 @@ const VideoChat = () => {
                 autoPlay
                 playsInline
                 muted
+                onLoadedMetadata={() => playVideo(localVideoRef, "Local")}
                 className={`video-element ${isVideoOff ? 'hidden-video' : ''}`}
                 style={{ width: '100%', height: '100%', objectFit: 'cover', display: isVideoOff ? 'none' : 'block' }}
               />
+
+              {/* Error overlay if media error exists */}
+              {mediaError && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white p-4 text-center">
+                  <p className="text-red-400 font-bold mb-2">Camera Error</p>
+                  <p className="text-xs mb-4">{mediaError}</p>
+                  <Button variant="secondary" size="sm" onClick={retryMedia}>Retry Camera</Button>
+                </div>
+              )}
+
+              {/* Manual Retry if no stream but no error yet (hidden by video if playing) */}
+              {!localStream && !mediaError && (
+                <div className="absolute top-2 right-2">
+                  <Button variant="ghost" size="sm" onClick={retryMedia} title="Retry Permissions">
+                    <VideoOff className="w-4 h-4 text-white" />
+                  </Button>
+                </div>
+              )}
 
               {isVideoOff ? (
                 <div className="video-off-overlay">
@@ -234,44 +269,66 @@ const VideoChat = () => {
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="video-controls">
-            <Button
-              variant={isMuted ? "destructive" : "secondary"}
-              size="icon"
-              className="control-button"
-              onClick={() => setIsMuted(!isMuted)}
-            >
-              {isMuted ? <MicOff className="control-icon" /> : <Mic className="control-icon" />}
-            </Button>
-            <Button
-              variant={isVideoOff ? "destructive" : "secondary"}
-              size="icon"
-              className="control-button"
-              onClick={() => setIsVideoOff(!isVideoOff)}
-            >
-              {isVideoOff ? <VideoOff className="control-icon" /> : <Video className="control-icon" />}
-            </Button>
-            {isConnected && (
-              <>
-                <Button
-                  variant="connect"
-                  size="icon"
-                  className="control-button"
-                  onClick={skipPartner}
-                >
-                  <SkipForward className="control-icon" />
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  className="control-button"
-                  onClick={endCall}
-                >
-                  <PhoneOff className="control-icon" />
-                </Button>
-              </>
-            )}
+          {/* Controls & Debug */}
+          <div className="flex flex-col gap-4">
+            {/* Controls */}
+            <div className="video-controls">
+              <Button
+                variant={isMuted ? "destructive" : "secondary"}
+                size="icon"
+                className="control-button"
+                onClick={() => setIsMuted(!isMuted)}
+              >
+                {isMuted ? <MicOff className="control-icon" /> : <Mic className="control-icon" />}
+              </Button>
+              <Button
+                variant={isVideoOff ? "destructive" : "secondary"}
+                size="icon"
+                className="control-button"
+                onClick={() => setIsVideoOff(!isVideoOff)}
+              >
+                {isVideoOff ? <VideoOff className="control-icon" /> : <Video className="control-icon" />}
+              </Button>
+              {isConnected && (
+                <>
+                  <Button
+                    variant="connect"
+                    size="icon"
+                    className="control-button"
+                    onClick={skipPartner}
+                  >
+                    <SkipForward className="control-icon" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="control-button"
+                    onClick={endCall}
+                  >
+                    <PhoneOff className="control-icon" />
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Mobile Debug Panel Toggle */}
+            <div className="text-center">
+              <button
+                onClick={() => setShowDebug(!showDebug)}
+                className="text-xs text-muted-foreground underline"
+              >
+                {showDebug ? "Hide Debug Logs" : "Show Debug Logs"}
+              </button>
+              {showDebug && (
+                <div className="mt-2 p-2 bg-black text-green-400 text-xs text-left h-32 overflow-y-auto font-mono rounded border border-gray-700">
+                  <p>Secure Context: {window.isSecureContext ? "Yes" : "No"}</p>
+                  <p>MediaDevices: {navigator.mediaDevices ? "Available" : "Undefined"}</p>
+                  <p>Local Stream: {localStream ? localStream.id : "Null"}</p>
+                  <p>Connection State: {connectionState}</p>
+                  <p>Error: {mediaError || "None"}</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
