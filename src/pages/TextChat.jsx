@@ -28,6 +28,14 @@ const TextChat = () => {
     const [sessionId, setSessionId] = useState(null);
 
     useEffect(() => {
+        return () => {
+            if (socket) {
+                socket.emit('skip-partner');
+            }
+        };
+    }, [socket]);
+
+    useEffect(() => {
         if (!socket) return;
 
         socket.on('match-found', ({ partnerId, role, sessionId }) => {

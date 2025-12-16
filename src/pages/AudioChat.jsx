@@ -17,6 +17,7 @@ import './AudioChat.css';
 import { useSocket } from '../providers/SocketProvider';
 import useToast from '../hooks/useToast';
 import useWebRTC from '../hooks/useWebRTC';
+import useLocalMedia from '../hooks/useLocalMedia';
 
 const AudioChat = () => {
   const { socket, isConnected: isSocketConnected } = useSocket();
@@ -32,8 +33,12 @@ const AudioChat = () => {
   const [sessionId, setSessionId] = useState(null);
   const [role, setRole] = useState(null);
 
-  // WebRTC Hook (Audio Only)
-  const { localStream, remoteStream } = useWebRTC(partnerId, role === 'initiator', false);
+  // 1. Persistent Local Media (Audio Only)
+  // we pass false for video.
+  const { localStream, mediaError, retryMedia } = useLocalMedia(false);
+
+  // 2. WebRTC Hook (Audio Only)
+  const { remoteStream } = useWebRTC(partnerId, role === 'initiator', localStream);
 
   // Audio Ref for remote stream
   const remoteAudioRef = useRef(null);
@@ -41,8 +46,19 @@ const AudioChat = () => {
   useEffect(() => {
     if (remoteAudioRef.current && remoteStream) {
       remoteAudioRef.current.srcObject = remoteStream;
+      // Audio autoplay policy is usually lenient, but explicit play is safer
+      remoteAudioRef.current.play().catch(e => console.error("Audio play error:", e));
     }
   }, [remoteStream]);
+
+  // Navigation Cleanup
+  useEffect(() => {
+    return () => {
+      if (socket) {
+        socket.emit('skip-partner');
+      }
+    };
+  }, [socket]);
 
   // Toggle Mute
   useEffect(() => {
