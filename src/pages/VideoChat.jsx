@@ -10,7 +10,9 @@ import {
   Send,
   ArrowLeft,
   User,
-  Loader2
+  Loader2,
+  MessageSquare,
+  X
 } from "lucide-react";
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -24,34 +26,34 @@ const VideoChat = () => {
   const { socket, isConnected: isSocketConnected } = useSocket();
   const { toast } = useToast();
 
-  const [isConnected, setIsConnected] = useState(false); // Call connected
+  const [isConnected, setIsConnected] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const [showChat, setShowChat] = useState(false); // New state for mobile chat
 
   const [partnerId, setPartnerId] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const [role, setRole] = useState(null);
 
-  const [showDebug, setShowDebug] = useState(false);
-
-  // 1. Persistent Local Media Hook
   const { localStream, mediaError, retryMedia } = useLocalMedia(true);
-
-  // 2. WebRTC Hook (Passes localStream)
   const { remoteStream, connectionState } = useWebRTC(partnerId, role === 'initiator', localStream);
 
-
-  // Video Refs
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const chatMessagesRef = useRef(null);
 
-  // Navigation Cleanup: Remove from queue if user leaves page
+  // Auto-scroll to bottom of chat when new message arrives
+  useEffect(() => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   useEffect(() => {
     return () => {
-      // Cleanup: emits 'skip-partner' which handles queue removal and disconnects on backend
       if (socket) {
         console.log("Navigating away, cleaning up...");
         socket.emit('skip-partner');
@@ -59,8 +61,6 @@ const VideoChat = () => {
     };
   }, [socket]);
 
-
-  // Helper to safely play video
   const playVideo = async (videoRef, streamName) => {
     if (videoRef.current) {
       try {
@@ -86,7 +86,6 @@ const VideoChat = () => {
     }
   }, [remoteStream]);
 
-  // Effect to toggle Tracks based on mute/video-off state
   useEffect(() => {
     if (localStream) {
       localStream.getAudioTracks().forEach(track => track.enabled = !isMuted);
@@ -104,7 +103,6 @@ const VideoChat = () => {
       setSessionId(sessionId);
       setRole(role);
       toast({ title: "Connected!", description: "You are now chatting with a stranger." });
-
       console.log(`Matched as ${role} with ${partnerId}`);
     });
 
@@ -117,6 +115,7 @@ const VideoChat = () => {
       setPartnerId(null);
       setSessionId(null);
       setRole(null);
+      setMessages([]);
       toast({ title: "Partner disconnected", variant: "destructive" });
     });
 
@@ -133,7 +132,6 @@ const VideoChat = () => {
       return;
     }
     setIsSearching(true);
-    // Ensure cleanup of previous state if any
     setPartnerId(null);
     setRole(null);
     socket.emit('start-searching', { type: 'video' });
@@ -146,12 +144,11 @@ const VideoChat = () => {
     setSessionId(null);
     setRole(null);
     setMessages([]);
-    // Auto start searching again
     startSearch();
   };
 
   const endCall = () => {
-    if (isConnected) { // Only emit skip (disconnect) if actually connected
+    if (isConnected) {
       socket.emit('skip-partner');
     }
     setIsConnected(false);
@@ -165,15 +162,12 @@ const VideoChat = () => {
     e.preventDefault();
     if (!message.trim() || !partnerId) return;
 
-    // Optimistic update
     setMessages(prev => [...prev, { text: message, isOwn: true }]);
-
     socket.emit('send-message', {
       to: partnerId,
       message,
       sessionId
     });
-
     setMessage("");
   };
 
@@ -229,7 +223,6 @@ const VideoChat = () => {
                       playsInline
                       className="video-element"
                       onLoadedMetadata={() => playVideo(remoteVideoRef, "Remote")}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
                   ) : (
                     <div className="partner-connected">
@@ -255,23 +248,21 @@ const VideoChat = () => {
                 muted
                 onLoadedMetadata={() => playVideo(localVideoRef, "Local")}
                 className={`video-element ${isVideoOff ? 'hidden-video' : ''}`}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: isVideoOff ? 'none' : 'block' }}
+                style={{ display: isVideoOff ? 'none' : 'block' }}
               />
 
-              {/* Error overlay if media error exists */}
               {mediaError && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white p-4 text-center">
-                  <p className="text-red-400 font-bold mb-2">Camera Error</p>
-                  <p className="text-xs mb-4">{mediaError}</p>
+                <div className="media-error-overlay">
+                  <p className="media-error-title">Camera Error</p>
+                  <p className="media-error-description">{mediaError}</p>
                   <Button variant="secondary" size="sm" onClick={retryMedia}>Retry Camera</Button>
                 </div>
               )}
 
-              {/* Manual Retry if no stream but no error yet (hidden by video if playing) */}
               {!localStream && !mediaError && (
-                <div className="absolute top-2 right-2">
+                <div className="retry-overlay">
                   <Button variant="ghost" size="sm" onClick={retryMedia} title="Retry Permissions">
-                    <VideoOff className="w-4 h-4 text-white" />
+                    <VideoOff className="retry-icon" />
                   </Button>
                 </div>
               )}
@@ -285,9 +276,8 @@ const VideoChat = () => {
             </div>
           </div>
 
-          {/* Controls & Debug */}
-          <div className="flex flex-col gap-4">
-            {/* Controls */}
+          {/* Controls */}
+          <div className="controls-container">
             <div className="video-controls">
               <Button
                 variant={isMuted ? "destructive" : "secondary"}
@@ -305,6 +295,22 @@ const VideoChat = () => {
               >
                 {isVideoOff ? <VideoOff className="control-icon" /> : <Video className="control-icon" />}
               </Button>
+              
+              {/* Chat Toggle Button for Mobile */}
+              <div className="mobile-chat-toggle">
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="control-button"
+                  onClick={() => setShowChat(!showChat)}
+                >
+                  {showChat ? <X className="control-icon" /> : <MessageSquare className="control-icon" />}
+                  {messages.length > 0 && !showChat && (
+                    <span className="message-badge">{messages.length}</span>
+                  )}
+                </Button>
+              </div>
+
               {isConnected && (
                 <>
                   <Button
@@ -326,17 +332,16 @@ const VideoChat = () => {
                 </>
               )}
             </div>
-
           </div>
         </div>
 
-        {/* Chat Sidebar */}
-        <div className="chat-sidebar">
+        {/* Desktop Chat Sidebar (always visible on desktop) */}
+        <div className="chat-sidebar desktop-chat">
           <div className="chat-header">
             <h2 className="chat-title">Chat</h2>
           </div>
 
-          <div className="chat-messages">
+          <div className="chat-messages" ref={chatMessagesRef}>
             {messages.length === 0 ? (
               <p className="empty-chat">
                 {isConnected ? "Say hello!" : "Connect to start chatting"}
@@ -372,6 +377,59 @@ const VideoChat = () => {
             </div>
           </form>
         </div>
+
+        {/* Mobile Chat Drawer */}
+        <div className={`mobile-chat-drawer ${showChat ? 'open' : ''}`}>
+          <div className="chat-drawer-header">
+            <h2 className="chat-title">Chat</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowChat(false)}
+            >
+              <X className="header-icon" />
+            </Button>
+          </div>
+
+          <div className="chat-messages" ref={chatMessagesRef}>
+            {messages.length === 0 ? (
+              <p className="empty-chat">
+                {isConnected ? "Say hello!" : "Connect to start chatting"}
+              </p>
+            ) : (
+              messages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`message-container ${msg.isOwn ? "own-message" : "partner-message"}`}
+                >
+                  <div
+                    className={`message-bubble ${msg.isOwn ? "own-bubble" : "partner-bubble"}`}
+                  >
+                    {msg.text}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <form onSubmit={sendMessage} className="chat-input-form">
+            <div className="input-container">
+              <Input
+                placeholder="Type a message..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                disabled={!isConnected}
+                className="chat-input"
+              />
+              <Button type="submit" size="icon" disabled={!isConnected || !message.trim()}>
+                <Send className="send-icon" />
+              </Button>
+            </div>
+          </form>
+        </div>
+        
+        {/* Overlay when mobile chat is open */}
+        {showChat && <div className="mobile-chat-overlay" onClick={() => setShowChat(false)} />}
       </div>
     </div>
   );
