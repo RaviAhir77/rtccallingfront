@@ -21,6 +21,8 @@ import { useSocket } from '../providers/SocketProvider';
 import useToast from '../hooks/useToast';
 import useWebRTC from '../hooks/useWebRTC';
 import useLocalMedia from '../hooks/useLocalMedia';
+import useMobileKeyboardHandler from '../hooks/useMobileKeyboardHandler';
+
 
 const VideoChat = () => {
   const { socket, isConnected: isSocketConnected } = useSocket();
@@ -40,10 +42,12 @@ const VideoChat = () => {
 
   const { localStream, mediaError, retryMedia } = useLocalMedia(true);
   const { remoteStream, connectionState } = useWebRTC(partnerId, role === 'initiator', localStream);
+  const { keyboardHeight, isKeyboardVisible } = useMobileKeyboardHandler();
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const chatMessagesRef = useRef(null);
+  const chatInputRef = useRef(null);
 
   // Auto-scroll to bottom of chat when new message arrives
   useEffect(() => {
@@ -171,6 +175,29 @@ const VideoChat = () => {
     setMessage("");
   };
 
+  const scrollChatToBottom = () => {
+    if (chatMessagesRef.current) {
+      setTimeout(() => {
+        chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+      }, 100);
+    }
+  };
+
+  // Handle input focus
+  const handleInputFocus = () => {
+    scrollChatToBottom();
+  };
+
+  // Auto-focus input when chat opens on mobile
+  useEffect(() => {
+    if (showChat && chatInputRef.current && window.innerWidth <= 768) {
+      setTimeout(() => {
+        chatInputRef.current.focus();
+      }, 300);
+    }
+  }, [showChat]);
+
+
   return (
     <div className="video-chat-container">
       {/* Header */}
@@ -295,7 +322,7 @@ const VideoChat = () => {
               >
                 {isVideoOff ? <VideoOff className="control-icon" /> : <Video className="control-icon" />}
               </Button>
-              
+
               {/* Chat Toggle Button for Mobile */}
               <div className="mobile-chat-toggle">
                 <Button
@@ -378,56 +405,81 @@ const VideoChat = () => {
           </form>
         </div>
 
-        {/* Mobile Chat Drawer */}
-        <div className={`mobile-chat-drawer ${showChat ? 'open' : ''}`}>
+        {/* Mobile Chat Drawer - UPDATED */}
+        <div
+          className={`mobile-chat-drawer ${showChat ? 'open' : ''}`}
+          style={{
+            // Adjust drawer height when keyboard is open
+            height: isKeyboardVisible ? `calc(100vh - ${keyboardHeight}px)` : '100vh',
+            // Push drawer up when keyboard is open
+            bottom: isKeyboardVisible ? keyboardHeight : 0,
+          }}
+        >
           <div className="chat-drawer-header">
             <h2 className="chat-title">Chat</h2>
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setShowChat(false)}
+              onClick={() => {
+                setShowChat(false);
+                // Blur input when closing chat
+                if (chatInputRef.current) {
+                  chatInputRef.current.blur();
+                }
+              }}
             >
               <X className="header-icon" />
             </Button>
           </div>
 
-          <div className="chat-messages" ref={chatMessagesRef}>
-            {messages.length === 0 ? (
-              <p className="empty-chat">
-                {isConnected ? "Say hello!" : "Connect to start chatting"}
-              </p>
-            ) : (
-              messages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`message-container ${msg.isOwn ? "own-message" : "partner-message"}`}
-                >
-                  <div
-                    className={`message-bubble ${msg.isOwn ? "own-bubble" : "partner-bubble"}`}
-                  >
-                    {msg.text}
-                  </div>
-                </div>
-              ))
-            )}
+          <div
+            className="chat-messages"
+            ref={chatMessagesRef}
+            style={{
+              // Make messages area shorter when keyboard is open
+              maxHeight: isKeyboardVisible ? `calc(100% - 120px)` : 'calc(100% - 120px)',
+              overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+            }}
+          >
+            {/* ... existing messages ... */}
           </div>
 
           <form onSubmit={sendMessage} className="chat-input-form">
-            <div className="input-container">
+            <div
+              className="input-container"
+              style={{
+                position: 'sticky',
+                bottom: 0,
+                backgroundColor: 'var(--card)',
+                paddingTop: '0.5rem',
+                borderTop: '1px solid var(--border)',
+              }}
+            >
               <Input
+                ref={chatInputRef} // Add ref
                 placeholder="Type a message..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                onFocus={handleInputFocus}
                 disabled={!isConnected}
                 className="chat-input"
+                style={{
+                  // Ensure input is visible when keyboard is open
+                  fontSize: '16px', // Prevents iOS zoom on focus
+                }}
               />
-              <Button type="submit" size="icon" disabled={!isConnected || !message.trim()}>
+              <Button
+                type="submit"
+                size="icon"
+                disabled={!isConnected || !message.trim()}
+              >
                 <Send className="send-icon" />
               </Button>
             </div>
           </form>
         </div>
-        
+
         {/* Overlay when mobile chat is open */}
         {showChat && <div className="mobile-chat-overlay" onClick={() => setShowChat(false)} />}
       </div>

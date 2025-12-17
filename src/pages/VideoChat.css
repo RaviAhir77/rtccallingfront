@@ -524,6 +524,44 @@
     grid-template-columns: repeat(2, 1fr);
     min-height: 500px;
   }
+
+  .mobile-chat-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000;
+    background-color: var(--card);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-chat-drawer.open {
+    transform: translateX(0);
+  }
+
+  /* Make sure input is always visible */
+  .chat-input-form {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--card);
+    padding: 1rem;
+    border-top: 1px solid var(--border);
+    margin-top: auto; /* Push to bottom */
+  }
+
+  /* Messages area takes remaining space */
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1rem;
+  }
 }
 
 /* Video element styling */
@@ -627,4 +665,11 @@
   .mobile-chat-drawer {
     max-width: 100%;
   }
+}
+
+.video-chat-container.chat-open {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
