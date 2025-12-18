@@ -1,4 +1,6 @@
-/* Video Chat Container */
+/* =============
+   GLOBAL / RESET
+============= */
 .video-chat-container {
   min-height: 100vh;
   background-color: var(--background);
@@ -6,7 +8,9 @@
   flex-direction: column;
 }
 
-/* Header */
+/* =============
+   HEADER
+============= */
 .video-chat-header {
   height: 3.5rem;
   border-bottom: 1px solid var(--border);
@@ -44,12 +48,14 @@
   animation: pulse 1.5s infinite;
 }
 
-/* Main Layout */
+/* =============
+   MAIN LAYOUT
+============= */
 .video-chat-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  position: relative; /* Added for mobile chat positioning */
+  position: relative;
 }
 
 @media (min-width: 1024px) {
@@ -58,7 +64,9 @@
   }
 }
 
-/* Video Area */
+/* =============
+   VIDEO AREA
+============= */
 .video-area {
   flex: 1;
   padding: 1rem;
@@ -81,7 +89,9 @@
   }
 }
 
-/* Video Containers */
+/* =============
+   VIDEO CONTAINERS
+============= */
 .video-container {
   position: relative;
   background-color: var(--secondary-bg);
@@ -100,7 +110,9 @@
   background: linear-gradient(135deg, var(--secondary-bg), var(--muted-light));
 }
 
-/* Connection States */
+/* =============
+   CONNECTION STATES (Prompts, Loading, etc.)
+============= */
 .connection-prompt {
   text-align: center;
   padding: 2rem;
@@ -154,66 +166,43 @@
   color: var(--muted);
 }
 
-.partner-connected {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.partner-avatar {
-  width: 6rem;
-  height: 6rem;
-  border-radius: 50%;
-  background-color: var(--muted-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-}
-
-.partner-icon {
-  height: 3rem;
-  width: 3rem;
-  color: var(--muted);
-}
-
-.partner-label {
-  position: absolute;
-  bottom: 1rem;
-  left: 1rem;
-  font-size: 0.875rem;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  backdrop-filter: blur(4px);
-}
-
-.partner-connected-overlay {
-  position: absolute;
-  bottom: 1rem;
-  left: 1rem;
-}
-
-/* Your Video States */
+.partner-connected,
+.partner-connected-overlay,
 .video-off-overlay {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+}
+
+.partner-connected {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+}
+
+.video-off-overlay {
   background-color: var(--muted-light);
 }
 
+.partner-avatar,
+.partner-icon,
 .video-off-icon {
-  height: 2.5rem;
-  width: 2.5rem;
+  width: 3rem;
+  height: 3rem;
   color: var(--muted);
 }
 
+.partner-avatar {
+  width: 6rem;
+  height: 6rem;
+  margin-bottom: 1rem;
+}
+
+/* =============
+   VIDEO LABELS
+============= */
+.partner-label,
 .your-label {
   position: absolute;
   bottom: 1rem;
@@ -225,7 +214,69 @@
   backdrop-filter: blur(4px);
 }
 
-/* Video Controls */
+/* =============
+   VIDEO ELEMENT
+============= */
+.video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-2xl);
+}
+
+/* =============
+   MEDIA ERROR & RETRY
+============= */
+.media-error-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  border-radius: var(--radius-2xl);
+  z-index: 10;
+}
+
+.media-error-title {
+  color: #f87171;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.media-error-description {
+  font-size: 0.75rem;
+  margin-bottom: 1rem;
+  max-width: 80%;
+}
+
+.retry-overlay {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 5;
+}
+
+.retry-icon {
+  width: 1rem;
+  height: 1rem;
+  color: white;
+}
+
+/* =============
+   CONTROLS
+============= */
+.controls-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem;
+}
+
 .video-controls {
   display: flex;
   align-items: center;
@@ -238,7 +289,7 @@
   height: 3rem;
   width: 3rem;
   border-radius: 50%;
-  position: relative; /* For message badge positioning */
+  position: relative;
 }
 
 .control-icon {
@@ -246,7 +297,26 @@
   width: 1.25rem;
 }
 
-/* Chat Sidebar */
+/* Message badge on chat button */
+.message-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background-color: var(--accent);
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+/* =============
+   CHAT — DESKTOP
+============= */
 .chat-sidebar {
   width: 100%;
   border-top: 1px solid var(--border);
@@ -289,7 +359,9 @@
   padding: 2rem 0;
 }
 
-/* Messages */
+/* =============
+   CHAT — MESSAGES
+============= */
 .message-container {
   display: flex;
 }
@@ -323,7 +395,9 @@
   border-bottom-left-radius: var(--radius-sm);
 }
 
-/* Chat Input */
+/* =============
+   CHAT — INPUT
+============= */
 .chat-input-form {
   padding: 1rem;
   border-top: 1px solid var(--border);
@@ -343,160 +417,86 @@
   width: 1rem;
 }
 
-/* Animations */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+/* =============
+   MOBILE CHAT DRAWER
+============= */
+.mobile-chat-toggle {
+  display: inline-flex;
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.mobile-chat-drawer {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 100%;
+  max-width: 400px;
+  height: 100dvh;
+  background-color: var(--card);
+  border-left: 1px solid var(--border);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.3s ease-in-out;
+  box-shadow: -5px 0 20px rgba(0, 0, 0, 0.2);
 }
 
-/* Mobile Responsive Updates */
+.mobile-chat-drawer.open {
+  right: 0;
+}
 
-/* For mobile screens (under 768px) */
+.chat-drawer-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--card);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.mobile-chat-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  backdrop-filter: blur(2px);
+}
+
+/* =============
+   RESPONSIVE — MOBILE (<768px)
+============= */
 @media (max-width: 768px) {
-  /* Adjust video grid for mobile */
   .video-grid {
     grid-template-columns: 1fr;
     min-height: 300px;
-    gap: 0.5rem; /* Reduced gap on mobile */
+    gap: 0.5rem;
   }
 
-  /* Make video containers equal size - FIXED */
   .video-container {
     width: 100%;
-    height: 45vh; /* Fixed 45% of viewport height */
-    min-height: 180px; /* Reduced min-height */
+    height: 45vh;
+    min-height: 180px;
     max-height: 45vh;
   }
 
-  /* Video element styling for mobile */
   .video-element {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: var(--radius-lg); /* Smaller radius on mobile */
+    border-radius: var(--radius-lg);
   }
 
-  /* Hide desktop chat on mobile */
   .desktop-chat {
     display: none !important;
   }
 
-  /* Mobile chat drawer - IMPROVED */
-  .mobile-chat-drawer {
-    position: fixed;
-    top: 0;
-    right: -100%;
-    width: 100%;
-    max-width: 400px;
-    height: 100vh;
-    background-color: var(--card);
-    border-left: 1px solid var(--border);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    transition: right 0.3s ease-in-out;
-    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.2);
-  }
-
-  .mobile-chat-drawer.open {
-    right: 0;
-  }
-
-  .chat-drawer-header {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: var(--card);
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    flex-shrink: 0;
-  }
-
-  /* Mobile chat toggle button */
-  .mobile-chat-toggle {
-    display: inline-flex;
-  }
-
-  /* Message badge on chat button - FIXED */
-  .message-badge {
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    background-color: var(--accent);
-    color: white;
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    font-size: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-  }
-
-  /* Chat overlay */
-  .mobile-chat-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    backdrop-filter: blur(2px);
-  }
-
-  /* Adjust video area padding on mobile */
   .video-area {
     padding: 0.75rem;
   }
 
-  /* Media error overlay for mobile */
-  .media-error-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 1rem;
-    text-align: center;
-    border-radius: var(--radius-lg);
-    z-index: 10;
-  }
-
-  .media-error-title {
-    color: #f87171;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-  }
-
-  .media-error-description {
-    font-size: 0.75rem;
-    margin-bottom: 1rem;
-    max-width: 90%;
-  }
-
-  /* Controls adjustments for mobile */
   .video-controls {
     gap: 0.75rem;
     padding: 0.5rem 0;
@@ -508,121 +508,9 @@
   }
 }
 
-/* For desktop screens (769px and above) */
-@media (min-width: 769px) {
-  .mobile-chat-drawer,
-  .mobile-chat-overlay,
-  .mobile-chat-toggle {
-    display: none !important;
-  }
-
-  .desktop-chat {
-    display: flex !important;
-  }
-
-  .video-grid {
-    grid-template-columns: repeat(2, 1fr);
-    min-height: 500px;
-  }
-
-  .mobile-chat-drawer {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    transform: translateX(100%);
-    transition: transform 0.3s ease-in-out;
-    z-index: 1000;
-    background-color: var(--card);
-    display: flex;
-    flex-direction: column;
-  }
-
-  .mobile-chat-drawer.open {
-    transform: translateX(0);
-  }
-
-  /* Make sure input is always visible */
-  .chat-input-form {
-    position: sticky;
-    bottom: 0;
-    background-color: var(--card);
-    padding: 1rem;
-    border-top: 1px solid var(--border);
-    margin-top: auto; /* Push to bottom */
-  }
-
-  /* Messages area takes remaining space */
-  .chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 1rem;
-  }
-}
-
-/* Video element styling */
-.video-element {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: var(--radius-2xl);
-}
-
-/* Media error overlay */
-.media-error-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 1rem;
-  text-align: center;
-  border-radius: var(--radius-2xl);
-  z-index: 10;
-}
-
-.media-error-title {
-  color: #f87171;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-
-.media-error-description {
-  font-size: 0.75rem;
-  margin-bottom: 1rem;
-  max-width: 80%;
-}
-
-/* Retry overlay */
-.retry-overlay {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  z-index: 5;
-}
-
-.retry-icon {
-  width: 1rem;
-  height: 1rem;
-  color: white;
-}
-
-/* Controls container */
-.controls-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 0.5rem;
-}
-
-/* For tablets (769px to 1024px) */
+/* =============
+   RESPONSIVE — TABLETS (769px–1024px)
+============= */
 @media (min-width: 769px) and (max-width: 1024px) {
   .video-chat-main {
     flex-direction: column;
@@ -644,12 +532,35 @@
   .video-grid {
     min-height: 450px;
   }
+
+  .mobile-chat-drawer,
+  .mobile-chat-overlay,
+  .mobile-chat-toggle {
+    display: none !important;
+  }
 }
 
-/* Extra small devices (under 480px) */
+/* =============
+   RESPONSIVE — DESKTOP (>1024px)
+============= */
+@media (min-width: 1025px) {
+  .mobile-chat-drawer,
+  .mobile-chat-overlay,
+  .mobile-chat-toggle {
+    display: none !important;
+  }
+
+  .desktop-chat {
+    display: flex !important;
+  }
+}
+
+/* =============
+   EXTRA SMALL DEVICES (<480px)
+============= */
 @media (max-width: 480px) {
   .video-container {
-    height: 40vh; /* Slightly smaller on very small screens */
+    height: 40vh;
     min-height: 150px;
   }
 
@@ -667,9 +578,22 @@
   }
 }
 
-.video-chat-container.chat-open {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
+/* =============
+   ANIMATIONS
+============= */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* =============
+   UTILITIES
+============= */
+.hidden-video {
+  display: none !important;
 }

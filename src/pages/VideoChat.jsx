@@ -407,13 +407,7 @@ const VideoChat = () => {
 
         {/* Mobile Chat Drawer - UPDATED */}
         <div
-          className={`mobile-chat-drawer ${showChat ? 'open' : ''}`}
-          style={{
-            // Adjust drawer height when keyboard is open
-            height: isKeyboardVisible ? `calc(100vh - ${keyboardHeight}px)` : '100vh',
-            // Push drawer up when keyboard is open
-            bottom: isKeyboardVisible ? keyboardHeight : 0,
-          }}
+          className={`mobile-chat-drawer ${showChat ? 'open' : ''} ${isKeyboardVisible ? 'keyboard-open' : ''}`}
         >
           <div className="chat-drawer-header">
             <h2 className="chat-title">Chat</h2>
@@ -422,7 +416,6 @@ const VideoChat = () => {
               size="icon"
               onClick={() => {
                 setShowChat(false);
-                // Blur input when closing chat
                 if (chatInputRef.current) {
                   chatInputRef.current.blur();
                 }
@@ -432,48 +425,42 @@ const VideoChat = () => {
             </Button>
           </div>
 
-          <div
-            className="chat-messages"
+          <div 
+            className="chat-messages" 
             ref={chatMessagesRef}
-            style={{
-              // Make messages area shorter when keyboard is open
-              maxHeight: isKeyboardVisible ? `calc(100% - 120px)` : 'calc(100% - 120px)',
-              overflowY: 'auto',
-              WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
-            }}
           >
-            {/* ... existing messages ... */}
+            {messages.length === 0 ? (
+              <p className="empty-chat">
+                {isConnected ? "Say hello!" : "Connect to start chatting"}
+              </p>
+            ) : (
+              messages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`message-container ${msg.isOwn ? "own-message" : "partner-message"}`}
+                >
+                  <div
+                    className={`message-bubble ${msg.isOwn ? "own-bubble" : "partner-bubble"}`}
+                  >
+                    {msg.text}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           <form onSubmit={sendMessage} className="chat-input-form">
-            <div
-              className="input-container"
-              style={{
-                position: 'sticky',
-                bottom: 0,
-                backgroundColor: 'var(--card)',
-                paddingTop: '0.5rem',
-                borderTop: '1px solid var(--border)',
-              }}
-            >
+            <div className="input-container">
               <Input
-                ref={chatInputRef} // Add ref
+                ref={chatInputRef}
                 placeholder="Type a message..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onFocus={handleInputFocus}
                 disabled={!isConnected}
                 className="chat-input"
-                style={{
-                  // Ensure input is visible when keyboard is open
-                  fontSize: '16px', // Prevents iOS zoom on focus
-                }}
               />
-              <Button
-                type="submit"
-                size="icon"
-                disabled={!isConnected || !message.trim()}
-              >
+              <Button type="submit" size="icon" disabled={!isConnected || !message.trim()}>
                 <Send className="send-icon" />
               </Button>
             </div>
