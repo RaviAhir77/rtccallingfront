@@ -21,7 +21,6 @@ import { useSocket } from '../providers/SocketProvider';
 import useToast from '../hooks/useToast';
 import useWebRTC from '../hooks/useWebRTC';
 import useLocalMedia from '../hooks/useLocalMedia';
-import useMobileKeyboardHandler from '../hooks/useMobileKeyboardHandler';
 
 
 const VideoChat = () => {
@@ -42,12 +41,12 @@ const VideoChat = () => {
 
   const { localStream, mediaError, retryMedia } = useLocalMedia(true);
   const { remoteStream, connectionState } = useWebRTC(partnerId, role === 'initiator', localStream);
-  const { keyboardHeight, isKeyboardVisible } = useMobileKeyboardHandler();
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const chatMessagesRef = useRef(null);
-  const chatInputRef = useRef(null);
+  const chatInputRef = useRef(null)
+  const chatContainerRef = useRef(null);
 
   // Auto-scroll to bottom of chat when new message arrives
   useEffect(() => {
@@ -188,12 +187,27 @@ const VideoChat = () => {
     scrollChatToBottom();
   };
 
-  // Auto-focus input when chat opens on mobile
   useEffect(() => {
-    if (showChat && chatInputRef.current && window.innerWidth <= 768) {
-      setTimeout(() => {
-        chatInputRef.current.focus();
-      }, 300);
+    if (window.visualViewport) {
+      const handleViewportResize = () => {
+        if (chatContainerRef.current && showChat && window.innerWidth <= 768) {
+          // Set container height to match visible viewport
+          chatContainerRef.current.style.height = `${window.visualViewport.height}px`;
+          
+          // Scroll to bottom when keyboard opens
+          setTimeout(() => {
+            if (chatMessagesRef.current) {
+              chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+            }
+          }, 100);
+        }
+      };
+
+      window.visualViewport.addEventListener('resize', handleViewportResize);
+
+      return () => {
+        window.visualViewport.removeEventListener('resize', handleViewportResize);
+      };
     }
   }, [showChat]);
 
@@ -407,7 +421,13 @@ const VideoChat = () => {
 
         {/* Mobile Chat Drawer - UPDATED */}
         <div
-          className={`mobile-chat-drawer ${showChat ? 'open' : ''} ${isKeyboardVisible ? 'keyboard-open' : ''}`}
+          className={`mobile-chat-drawer ${showChat ? 'open' : ''}`}
+          ref={chatContainerRef} // Add this ref
+          style={{
+            // Reset any inline styles that might interfere
+            height: showChat ? '100vh' : undefined,
+            bottom: 0,
+          }}
         >
           <div className="chat-drawer-header">
             <h2 className="chat-title">Chat</h2>
@@ -418,6 +438,10 @@ const VideoChat = () => {
                 setShowChat(false);
                 if (chatInputRef.current) {
                   chatInputRef.current.blur();
+                }
+                // Reset height when closing
+                if (chatContainerRef.current) {
+                  chatContainerRef.current.style.height = '';
                 }
               }}
             >
@@ -456,7 +480,14 @@ const VideoChat = () => {
                 placeholder="Type a message..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onFocus={handleInputFocus}
+                onFocus={() => {
+                  // Scroll to bottom when input is focused
+                  setTimeout(() => {
+                    if (chatMessagesRef.current) {
+                      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+                    }
+                  }, 100);
+                }}
                 disabled={!isConnected}
                 className="chat-input"
               />

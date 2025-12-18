@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // Add useRef
 import { Link } from "react-router-dom";
 import {
     Send,
@@ -27,6 +27,11 @@ const TextChat = () => {
     const [partnerId, setPartnerId] = useState(null);
     const [sessionId, setSessionId] = useState(null);
 
+    // Add these refs
+    const chatContainerRef = useRef(null);
+    const messagesContainerRef = useRef(null);
+    const messageInputRef = useRef(null);
+
     useEffect(() => {
         return () => {
             if (socket) {
@@ -34,6 +39,51 @@ const TextChat = () => {
             }
         };
     }, [socket]);
+
+    // Add this useEffect for mobile keyboard handling (same as VideoChat)
+    useEffect(() => {
+        // Only run this logic on mobile devices
+        const isMobile = window.matchMedia("(max-width: 768px)").matches;
+        if (!isMobile || !window.visualViewport) return;
+
+        const handleResize = () => {
+        if (chatContainerRef.current) {
+            // Force the container height to match the VISIBLE screen exactly
+            // This pushes the bottom of the div UP to sit on the keyboard
+            chatContainerRef.current.style.height = `${window.visualViewport.height}px`;
+            
+            // Scroll to bottom after layout shift
+            setTimeout(() => {
+                if (messagesContainerRef.current) {
+                    messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+                }
+            }, 100);
+        }
+        };
+
+        window.visualViewport.addEventListener("resize", handleResize);
+        window.visualViewport.addEventListener("scroll", handleResize); // Listen to scroll too for iOS
+
+        // Initial check
+        handleResize();
+
+        return () => {
+        window.visualViewport.removeEventListener("resize", handleResize);
+        window.visualViewport.removeEventListener("scroll", handleResize);
+        
+        // Cleanup: Reset height to CSS default when leaving
+        if (chatContainerRef.current) {
+            chatContainerRef.current.style.height = ''; 
+        }
+        };
+    }, []); // Run when connection status changes
+
+    // Auto-scroll to bottom when new messages arrive
+    useEffect(() => {
+        if (messagesContainerRef.current && isConnected) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+    }, [messages, isConnected]);
 
     useEffect(() => {
         if (!socket) return;
@@ -107,8 +157,17 @@ const TextChat = () => {
         setMessage("");
     };
 
+    // Handle input focus for mobile
+    const handleInputFocus = () => {
+        if (window.innerWidth <= 768 && messagesContainerRef.current) {
+            setTimeout(() => {
+                messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+            }, 100);
+        }
+    };
+
     return (
-        <div className="text-chat-container">
+        <div className="text-chat-container" ref={chatContainerRef}>
             {/* Header */}
             <header className="text-chat-header">
                 <Link to="/">
@@ -160,8 +219,8 @@ const TextChat = () => {
                     </div>
                 ) : (
                     <>
-                        {/* Messages Area */}
-                        <div className="messages-container">
+                        {/* Messages Area - Add ref */}
+                        <div className="messages-container" ref={messagesContainerRef}>
                             {messages.map((msg, idx) => (
                                 <div
                                     key={idx}
@@ -179,13 +238,15 @@ const TextChat = () => {
                             ))}
                         </div>
 
-                        {/* Input Area */}
+                        {/* Input Area - Add ref and onFocus handler */}
                         <form onSubmit={sendMessage} className="input-form">
                             <div className="input-wrapper">
                                 <Input
+                                    ref={messageInputRef}
                                     placeholder="Type your message..."
                                     value={message}
                                     onChange={(e) => setMessage(e.target.value)}
+                                    onFocus={handleInputFocus}
                                     className="message-input"
                                     autoFocus
                                 />
