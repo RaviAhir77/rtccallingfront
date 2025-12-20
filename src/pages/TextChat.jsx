@@ -222,19 +222,14 @@ const TextChat = () => {
                         {/* Messages Area - Add ref */}
                         <div className="messages-container" ref={messagesContainerRef}>
                             {messages.map((msg, idx) => (
-                                <div
-                                    key={idx}
-                                    className={`message-row ${msg.isOwn ? "own-message" : "partner-message"}`}
-                                >
-                                    <div className={`message-wrapper ${msg.isOwn ? "own-wrapper" : "partner-wrapper"}`}>
-                                        <div className={`avatar-container ${msg.isOwn ? "own-avatar" : "partner-avatar"}`}>
-                                            <User className="avatar-icon" />
-                                        </div>
-                                        <div className={`message-bubble ${msg.isOwn ? "own-bubble" : "partner-bubble"}`}>
-                                            <p className="message-text">{msg.text}</p>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div
+                                key={idx}
+                                className={`message-row ${msg.isOwn ? "own-message" : "partner-message"}`}
+                            >
+                                <p className={`message-text ${msg.isOwn ? "own-text" : "partner-text"}`}>
+                                {msg.text}
+                                </p>
+                            </div>
                             ))}
                         </div>
 

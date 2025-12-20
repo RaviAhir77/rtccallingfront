@@ -235,10 +235,27 @@
 }
 
 .message-text {
-  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  max-width: 80%;
+  word-wrap: break-word;
+  font-size: 0.9375rem;
   line-height: 1.4;
 }
+.own-text {
+  background-color: #dcf8c6; /* WhatsApp green */
+  color: #000;
+  margin-left: auto;
+  text-align: right;
+}
 
+.partner-text {
+  background-color: #ffffff;
+  color: #000;
+  border: 1px solid #e5e5e5;
+  margin-right: auto;
+  text-align: left;
+}
 /* Input Form */
 .input-form {
   flex-shrink: 0; /* Never shrink input */
