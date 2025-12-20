@@ -71,8 +71,10 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  margin: auto;
   width: 100%;
-  min-height: 0; /* Crucial for nested flex scrolling */
+  min-height: 0;
+  max-width: 48rem; /* Crucial for nested flex scrolling */
   overflow: hidden; /* The scrolling happens inside children, not here */
 }
 
