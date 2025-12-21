@@ -27,6 +27,11 @@ const Home = () => {
             </Link>
           </nav>
           <div className="header-buttons">
+            <div className="header-live-stats">
+              <Activity className="stat-icon pulse-animation" />
+              <span className="stat-value">{stats.totalUsers?.toLocaleString() || 0}</span>
+              <span className="stat-label">Online Now</span>
+            </div>
             <Link to="/profile">
               <Button variant="ghost" size="sm">Profile</Button>
             </Link>
@@ -42,7 +47,7 @@ const Home = () => {
         <div className="hero-container">
           <div className="hero-content">
             {/* Live Stats Banner */}
-            <div className="stats-banner-container">
+            {/* <div className="stats-banner-container">
               <div className="stats-banner">
                 <div className="stat-item highlight-stat">
                   <Activity className="stat-icon pulse-animation" />
@@ -50,23 +55,29 @@ const Home = () => {
                   <span className="stat-label">Online</span>
                 </div>
                 <div className="stat-divider" />
-                <div className="stat-item">
+                <div className="stat-item tooltip-container">
                   <Video className="stat-icon" />
-                  <span className="stat-value">{stats.videoUsers}</span>
-                  <span className="stat-label">Video</span>
+                  <div className="stat-details">
+                    <span className="stat-value">{stats.videoPairs} Pairs</span>
+                    <span className="stat-sublabel">{stats.videoWaiting} Waiting</span>
+                  </div>
                 </div>
-                <div className="stat-item">
+                <div className="stat-item tooltip-container">
                   <Phone className="stat-icon" />
-                  <span className="stat-value">{stats.audioUsers}</span>
-                  <span className="stat-label">Audio</span>
+                  <div className="stat-details">
+                    <span className="stat-value">{stats.audioPairs} Pairs</span>
+                    <span className="stat-sublabel">{stats.audioWaiting} Waiting</span>
+                  </div>
                 </div>
-                <div className="stat-item">
+                <div className="stat-item tooltip-container">
                   <MessageCircle className="stat-icon" />
-                  <span className="stat-value">{stats.textUsers}</span>
-                  <span className="stat-label">Text</span>
+                  <div className="stat-details">
+                    <span className="stat-value">{stats.textPairs} Pairs</span>
+                    <span className="stat-sublabel">{stats.textWaiting} Waiting</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <span className="badge">
               Meet New People Instantly
@@ -103,7 +114,7 @@ const Home = () => {
           <h2 className="section-title">Choose Your Way to Connect</h2>
           <div className="features-grid">
             <Link to="/video" className="feature-card-link">
-              <div className="feature-card">
+              <div className="feature-card video-card">  {/* Added video-card for color styling */}
                 <div className="feature-icon video-icon">
                   <Video className="icon-large" />
                 </div>
@@ -111,10 +122,23 @@ const Home = () => {
                 <p className="feature-description">
                   Face-to-face conversations with random strangers. See and be seen.
                 </p>
+                
+                {/* Merged Live Stats */}
+                <div className="feature-stats">
+                  <div className="stat-item">
+                    <span className="stat-value large">{stats.videoPairs?.toLocaleString() || 0}</span>
+                    <span className="stat-label">Active Pairs</span>
+                  </div>
+                  <div className="stat-item waiting">
+                    <span className="stat-value medium">{stats.videoWaiting?.toLocaleString() || 0}</span>
+                    <span className="stat-label">Waiting</span>
+                  </div>
+                </div>
               </div>
             </Link>
+
             <Link to="/audio" className="feature-card-link">
-              <div className="feature-card">
+              <div className="feature-card audio-card">  {/* Added audio-card */}
                 <div className="feature-icon audio-icon">
                   <Phone className="icon-large" />
                 </div>
@@ -122,10 +146,22 @@ const Home = () => {
                 <p className="feature-description">
                   Voice-only calls for when you want to talk without video.
                 </p>
+                
+                <div className="feature-stats">
+                  <div className="stat-item">
+                    <span className="stat-value large">{stats.audioPairs?.toLocaleString() || 0}</span>
+                    <span className="stat-label">Active Pairs</span>
+                  </div>
+                  <div className="stat-item waiting">
+                    <span className="stat-value medium">{stats.audioWaiting?.toLocaleString() || 0}</span>
+                    <span className="stat-label">Waiting</span>
+                  </div>
+                </div>
               </div>
             </Link>
+
             <Link to="/text" className="feature-card-link">
-              <div className="feature-card">
+              <div className="feature-card text-card">  {/* Added text-card */}
                 <div className="feature-icon text-icon">
                   <MessageCircle className="icon-large" />
                 </div>
@@ -133,6 +169,17 @@ const Home = () => {
                 <p className="feature-description">
                   Classic text messaging with random people. Simple and anonymous.
                 </p>
+                
+                <div className="feature-stats">
+                  <div className="stat-item">
+                    <span className="stat-value large">{stats.textPairs?.toLocaleString() || 0}</span>
+                    <span className="stat-label">Active Pairs</span>
+                  </div>
+                  <div className="stat-item waiting">
+                    <span className="stat-value medium">{stats.textWaiting?.toLocaleString() || 0}</span>
+                    <span className="stat-label">Waiting</span>
+                  </div>
+                </div>
               </div>
             </Link>
           </div>

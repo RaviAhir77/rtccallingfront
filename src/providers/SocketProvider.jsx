@@ -15,9 +15,12 @@ export const SocketProvider = ({ children }) => {
     const [me, setMe] = useState('');
     const [stats, setStats] = useState({
         totalUsers: 0,
-        videoUsers: 0,
-        audioUsers: 0,
-        textUsers: 0
+        videoPairs: 0,
+        videoWaiting: 0,
+        audioPairs: 0,
+        audioWaiting: 0,
+        textPairs: 0,
+        textWaiting: 0
     });
 
     // Use a ref to prevent multiple connection attempts
