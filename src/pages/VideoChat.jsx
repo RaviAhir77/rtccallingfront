@@ -21,6 +21,7 @@ import { useSocket } from '../providers/SocketProvider';
 import useToast from '../hooks/useToast';
 import useWebRTC from '../hooks/useWebRTC';
 import useLocalMedia from '../hooks/useLocalMedia';
+import usePageLeaveProtection from '../hooks/usePageLeaveProtection';
 
 
 const VideoChat = () => {
@@ -34,6 +35,9 @@ const VideoChat = () => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [showChat, setShowChat] = useState(false); // New state for mobile chat
+
+  // Navigation Protection
+  usePageLeaveProtection(isConnected);
 
   const [partnerId, setPartnerId] = useState(null);
   const [sessionId, setSessionId] = useState(null);
@@ -193,7 +197,7 @@ const VideoChat = () => {
         if (chatContainerRef.current && showChat && window.innerWidth <= 768) {
           // Set container height to match visible viewport
           chatContainerRef.current.style.height = `${window.visualViewport.height}px`;
-          
+
           // Scroll to bottom when keyboard opens
           setTimeout(() => {
             if (chatMessagesRef.current) {
@@ -449,8 +453,8 @@ const VideoChat = () => {
             </Button>
           </div>
 
-          <div 
-            className="chat-messages" 
+          <div
+            className="chat-messages"
             ref={chatMessagesRef}
           >
             {messages.length === 0 ? (

@@ -18,6 +18,7 @@ import { useSocket } from '../providers/SocketProvider';
 import useToast from '../hooks/useToast';
 import useWebRTC from '../hooks/useWebRTC';
 import useLocalMedia from '../hooks/useLocalMedia';
+import usePageLeaveProtection from '../hooks/usePageLeaveProtection';
 
 const AudioChat = () => {
   const { socket, isConnected: isSocketConnected } = useSocket();
@@ -29,6 +30,9 @@ const AudioChat = () => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
+  // Navigation Protection
+  usePageLeaveProtection(isConnected);
+
   const [partnerId, setPartnerId] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const [role, setRole] = useState(null);
@@ -36,8 +40,8 @@ const AudioChat = () => {
 
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
-    const messagesContainerRef = useRef(null);
-    const messageInputRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+  const messageInputRef = useRef(null);
   // 1. Persistent Local Media (Audio Only)
   // we pass false for video.
   const { localStream, mediaError, retryMedia } = useLocalMedia(false);

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import Home from './pages/Home';
 import VideoChat from './pages/VideoChat';
 import AudioChat from './pages/AudioChat';
@@ -7,19 +7,34 @@ import Profile from './pages/Profile';
 import { ToastProvider } from './providers/ToastProvider';
 import { SocketProvider } from './providers/SocketProvider';
 
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Home />,
+  },
+  {
+    path: "/video",
+    element: <VideoChat />,
+  },
+  {
+    path: "/audio",
+    element: <AudioChat />,
+  },
+  {
+    path: "/text",
+    element: <TextChat />,
+  },
+  {
+    path: "/profile",
+    element: <Profile />,
+  },
+]);
+
 function App() {
   return (
     <ToastProvider>
       <SocketProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/video" element={<VideoChat />} />
-            <Route path="/audio" element={<AudioChat />} />
-            <Route path="/text" element={<TextChat />} />
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
-        </BrowserRouter>
+        <RouterProvider router={router} />
       </SocketProvider>
     </ToastProvider>
   );

@@ -13,6 +13,12 @@ export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
     const [isConnected, setIsConnected] = useState(false);
     const [me, setMe] = useState('');
+    const [stats, setStats] = useState({
+        totalUsers: 0,
+        videoUsers: 0,
+        audioUsers: 0,
+        textUsers: 0
+    });
 
     // Use a ref to prevent multiple connection attempts
     const socketRef = useRef(null);
@@ -45,6 +51,10 @@ export const SocketProvider = ({ children }) => {
                 setMe(id);
             });
 
+            socketRef.current.on('stats-update', (newStats) => {
+                setStats(newStats);
+            });
+
             socketRef.current.on('disconnect', () => {
                 console.log('Disconnected from socket server');
                 setIsConnected(false);
@@ -61,7 +71,7 @@ export const SocketProvider = ({ children }) => {
     }, []);
 
     return (
-        <SocketContext.Provider value={{ socket, isConnected, me }}>
+        <SocketContext.Provider value={{ socket, isConnected, me, stats }}>
             {children}
         </SocketContext.Provider>
     );

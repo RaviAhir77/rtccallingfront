@@ -14,6 +14,7 @@ import Input from '../components/Input';
 import './TextChat.css';
 import { useSocket } from '../providers/SocketProvider';
 import useToast from '../hooks/useToast';
+import usePageLeaveProtection from '../hooks/usePageLeaveProtection';
 
 const TextChat = () => {
     const { socket, isConnected: isSocketConnected } = useSocket();
@@ -26,6 +27,9 @@ const TextChat = () => {
 
     const [partnerId, setPartnerId] = useState(null);
     const [sessionId, setSessionId] = useState(null);
+
+    // Navigation Protection
+    usePageLeaveProtection(isConnected);
 
     // Add these refs
     const chatContainerRef = useRef(null);
@@ -47,18 +51,18 @@ const TextChat = () => {
         if (!isMobile || !window.visualViewport) return;
 
         const handleResize = () => {
-        if (chatContainerRef.current) {
-            // Force the container height to match the VISIBLE screen exactly
-            // This pushes the bottom of the div UP to sit on the keyboard
-            chatContainerRef.current.style.height = `${window.visualViewport.height}px`;
-            
-            // Scroll to bottom after layout shift
-            setTimeout(() => {
-                if (messagesContainerRef.current) {
-                    messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-                }
-            }, 100);
-        }
+            if (chatContainerRef.current) {
+                // Force the container height to match the VISIBLE screen exactly
+                // This pushes the bottom of the div UP to sit on the keyboard
+                chatContainerRef.current.style.height = `${window.visualViewport.height}px`;
+
+                // Scroll to bottom after layout shift
+                setTimeout(() => {
+                    if (messagesContainerRef.current) {
+                        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+                    }
+                }, 100);
+            }
         };
 
         window.visualViewport.addEventListener("resize", handleResize);
@@ -68,13 +72,13 @@ const TextChat = () => {
         handleResize();
 
         return () => {
-        window.visualViewport.removeEventListener("resize", handleResize);
-        window.visualViewport.removeEventListener("scroll", handleResize);
-        
-        // Cleanup: Reset height to CSS default when leaving
-        if (chatContainerRef.current) {
-            chatContainerRef.current.style.height = ''; 
-        }
+            window.visualViewport.removeEventListener("resize", handleResize);
+            window.visualViewport.removeEventListener("scroll", handleResize);
+
+            // Cleanup: Reset height to CSS default when leaving
+            if (chatContainerRef.current) {
+                chatContainerRef.current.style.height = '';
+            }
         };
     }, []); // Run when connection status changes
 
@@ -222,14 +226,14 @@ const TextChat = () => {
                         {/* Messages Area - Add ref */}
                         <div className="messages-container" ref={messagesContainerRef}>
                             {messages.map((msg, idx) => (
-                            <div
-                                key={idx}
-                                className={`message-row ${msg.isOwn ? "own-message" : "partner-message"}`}
-                            >
-                                <p className={`message-text ${msg.isOwn ? "own-text" : "partner-text"}`}>
-                                {msg.text}
-                                </p>
-                            </div>
+                                <div
+                                    key={idx}
+                                    className={`message-row ${msg.isOwn ? "own-message" : "partner-message"}`}
+                                >
+                                    <p className={`message-text ${msg.isOwn ? "own-text" : "partner-text"}`}>
+                                        {msg.text}
+                                    </p>
+                                </div>
                             ))}
                         </div>
 

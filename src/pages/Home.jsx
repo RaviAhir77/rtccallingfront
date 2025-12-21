@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link } from "react-router-dom";
-import { Video, Phone, MessageCircle, Shield, Users, Zap } from "lucide-react";
+import { Video, Phone, MessageCircle, Shield, Users, Zap, Activity } from "lucide-react";
 import Button from '../components/Button';
+import { useSocket } from '../providers/SocketProvider';
 
 const Home = () => {
+  const { stats } = useSocket();
+
   return (
     <div className="app-container">
       {/* Header */}
@@ -38,6 +41,33 @@ const Home = () => {
       <section className="hero-section">
         <div className="hero-container">
           <div className="hero-content">
+            {/* Live Stats Banner */}
+            <div className="stats-banner-container">
+              <div className="stats-banner">
+                <div className="stat-item highlight-stat">
+                  <Activity className="stat-icon pulse-animation" />
+                  <span className="stat-value">{stats.totalUsers}</span>
+                  <span className="stat-label">Online</span>
+                </div>
+                <div className="stat-divider" />
+                <div className="stat-item">
+                  <Video className="stat-icon" />
+                  <span className="stat-value">{stats.videoUsers}</span>
+                  <span className="stat-label">Video</span>
+                </div>
+                <div className="stat-item">
+                  <Phone className="stat-icon" />
+                  <span className="stat-value">{stats.audioUsers}</span>
+                  <span className="stat-label">Audio</span>
+                </div>
+                <div className="stat-item">
+                  <MessageCircle className="stat-icon" />
+                  <span className="stat-value">{stats.textUsers}</span>
+                  <span className="stat-label">Text</span>
+                </div>
+              </div>
+            </div>
+
             <span className="badge">
               Meet New People Instantly
             </span>
@@ -46,7 +76,7 @@ const Home = () => {
               <span className="highlight">Around the World</span>
             </h1>
             <p className="hero-description">
-              Video chat, voice call, or text with random people from anywhere. 
+              Video chat, voice call, or text with random people from anywhere.
               Simple, anonymous, and fun.
             </p>
             <div className="hero-buttons">
