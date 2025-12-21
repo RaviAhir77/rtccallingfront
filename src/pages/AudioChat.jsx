@@ -33,6 +33,11 @@ const AudioChat = () => {
   const [sessionId, setSessionId] = useState(null);
   const [role, setRole] = useState(null);
 
+
+  const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
+    const messagesContainerRef = useRef(null);
+    const messageInputRef = useRef(null);
   // 1. Persistent Local Media (Audio Only)
   // we pass false for video.
   const { localStream, mediaError, retryMedia } = useLocalMedia(false);
@@ -59,6 +64,39 @@ const AudioChat = () => {
       }
     };
   }, [socket]);
+
+  // Mobile keyboard handling using Visual Viewport (consistent with TextChat/VideoChat)
+  useEffect(() => {
+    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+    if (!isMobile || !window.visualViewport) return;
+
+    const handleResize = () => {
+      if (chatContainerRef.current) {
+        // Force the container height to match the VISIBLE screen
+        chatContainerRef.current.style.height = `${window.visualViewport.height}px`;
+
+        // Scroll to bottom after layout shift
+        setTimeout(() => {
+          if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+          }
+        }, 100);
+      }
+    };
+
+    window.visualViewport.addEventListener("resize", handleResize);
+    window.visualViewport.addEventListener("scroll", handleResize);
+
+    handleResize();
+
+    return () => {
+      window.visualViewport.removeEventListener("resize", handleResize);
+      window.visualViewport.removeEventListener("scroll", handleResize);
+      if (chatContainerRef.current) {
+        chatContainerRef.current.style.height = '';
+      }
+    };
+  }, []);
 
   // Toggle Mute
   useEffect(() => {
@@ -98,6 +136,13 @@ const AudioChat = () => {
       socket.off('partner-disconnected');
     };
   }, [socket, toast]);
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    if (messagesContainerRef.current && isConnected) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages, isConnected]);
 
   const startSearch = () => {
     if (!isSocketConnected) {
@@ -145,7 +190,10 @@ const AudioChat = () => {
   };
 
   return (
-    <div className="audio-chat-container">
+    <div
+      ref={chatContainerRef}
+      className={`audio-chat-container ${isConnected ? 'is-connected' : ''}`}
+    >
       {/* Header */}
       <header className="audio-chat-header">
         <Link to="/">
@@ -247,29 +295,35 @@ const AudioChat = () => {
         </div>
 
         {/* Chat Sidebar */}
-        <div className="chat-sidebar">
+        <div className="audiochat-sidebar">
           <div className="chat-header">
             <h2 className="chat-title">Chat</h2>
           </div>
 
-          <div className="chat-messages">
+          <div
+            ref={messagesContainerRef}
+            className="audiochat-messages"
+          >
             {messages.length === 0 ? (
               <p className="empty-chat">
                 {isConnected ? "Say hello!" : "Connect to start chatting"}
               </p>
             ) : (
-              messages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`message-container ${msg.isOwn ? "own-message" : "partner-message"}`}
-                >
+              <>
+                {messages.map((msg, idx) => (
                   <div
-                    className={`message-bubble ${msg.isOwn ? "own-bubble" : "partner-bubble"}`}
+                    key={idx}
+                    className={`message-container ${msg.isOwn ? "own-message" : "partner-message"}`}
                   >
-                    {msg.text}
+                    <div
+                      className={`message-bubble ${msg.isOwn ? "own-bubble" : "partner-bubble"}`}
+                    >
+                      {msg.text}
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+                <div ref={messagesEndRef} />
+              </>
             )}
           </div>
 

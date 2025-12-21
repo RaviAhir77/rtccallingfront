@@ -519,6 +519,7 @@
 
   .desktop-chat {
     display: flex !important;
+    max-height: 95vh;
   }
 
   .video-grid {
