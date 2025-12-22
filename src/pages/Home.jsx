@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from "react-router-dom";
-import { Video, Phone, MessageCircle, Shield, Users, Zap, Activity } from "lucide-react";
+import { Video, Phone, MessageCircle, Shield, Users, Zap, Activity, Users as UsersIcon, Clock } from "lucide-react";
 import Button from '../components/Button';
 import { useSocket } from '../providers/SocketProvider';
 
@@ -27,14 +27,16 @@ const Home = () => {
             </Link>
           </nav>
           <div className="header-buttons">
-            <div className="header-live-stats">
-              <Activity className="stat-icon pulse-animation" />
-              <span className="stat-value">{stats.totalUsers?.toLocaleString() || 0}</span>
-              <span className="stat-label">Online Now</span>
+             <div className="header-live-stats">
+              <div className="live-minimal">
+                <span className="live-signal">●</span>
+                <span className="live-number">{stats.totalUsers?.toLocaleString() || 0}</span>
+                <p className="live-label">online</p>
+              </div>
             </div>
-            <Link to="/profile">
+            {/* <Link to="/profile">
               <Button variant="ghost" size="sm">Profile</Button>
-            </Link>
+            </Link> */}
             <Link to="/video">
               <Button variant="hero" size="sm">Start Chatting</Button>
             </Link>
@@ -114,70 +116,123 @@ const Home = () => {
           <h2 className="section-title">Choose Your Way to Connect</h2>
           <div className="features-grid">
             <Link to="/video" className="feature-card-link">
-              <div className="feature-card video-card">  {/* Added video-card for color styling */}
-                <div className="feature-icon video-icon">
-                  <Video className="icon-large" />
+              <div className="feature-card video-card">
+                <div className="feature-header">
+                  <div className="feature-icon video-icon">
+                    <Video className="icon-large" />
+                  </div>
+                  <div className="live-badge">
+                    <div className="live-dot"></div>
+                    <span>LIVE</span>
+                  </div>
                 </div>
                 <h3 className="feature-title">Video Chat</h3>
                 <p className="feature-description">
                   Face-to-face conversations with random strangers. See and be seen.
                 </p>
                 
-                {/* Merged Live Stats */}
-                <div className="feature-stats">
-                  <div className="stat-item">
-                    <span className="stat-value large">{stats.videoPairs?.toLocaleString() || 0}</span>
-                    <span className="stat-label">Active Pairs</span>
+                {/* Modern Live Stats */}
+                <div className="live-stats-container">
+                  <div className="live-stat">
+                    <div className="live-stat-icon">
+                      <UsersIcon size={16} />
+                    </div>
+                    <div className="live-stat-content">
+                      <span className="live-stat-value">{stats.videoPairs?.toLocaleString() || 0}</span>
+                      <span className="live-stat-label">Active Now</span>
+                    </div>
                   </div>
-                  <div className="stat-item waiting">
-                    <span className="stat-value medium">{stats.videoWaiting?.toLocaleString() || 0}</span>
-                    <span className="stat-label">Waiting</span>
+                  
+                  <div className="live-stat waiting">
+                    <div className="live-stat-icon">
+                      <Clock size={16} />
+                    </div>
+                    <div className="live-stat-content">
+                      <span className="live-stat-value">{stats.videoWaiting?.toLocaleString() || 0}</span>
+                      <span className="live-stat-label">Waiting</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </Link>
 
             <Link to="/audio" className="feature-card-link">
-              <div className="feature-card audio-card">  {/* Added audio-card */}
-                <div className="feature-icon audio-icon">
-                  <Phone className="icon-large" />
+              <div className="feature-card audio-card">
+                <div className="feature-header">
+                  <div className="feature-icon audio-icon">
+                    <Phone className="icon-large" />
+                  </div>
+                  <div className="live-badge">
+                    <div className="live-dot"></div>
+                    <span>LIVE</span>
+                  </div>
                 </div>
                 <h3 className="feature-title">Audio Call</h3>
                 <p className="feature-description">
                   Voice-only calls for when you want to talk without video.
                 </p>
                 
-                <div className="feature-stats">
-                  <div className="stat-item">
-                    <span className="stat-value large">{stats.audioPairs?.toLocaleString() || 0}</span>
-                    <span className="stat-label">Active Pairs</span>
+                {/* Modern Live Stats */}
+                <div className="live-stats-container">
+                  <div className="live-stat">
+                    <div className="live-stat-icon">
+                      <Users size={16} />
+                    </div>
+                    <div className="live-stat-content">
+                      <span className="live-stat-value">{stats.audioPairs?.toLocaleString() || 0}</span>
+                      <span className="live-stat-label">Active Now</span>
+                    </div>
                   </div>
-                  <div className="stat-item waiting">
-                    <span className="stat-value medium">{stats.audioWaiting?.toLocaleString() || 0}</span>
-                    <span className="stat-label">Waiting</span>
+                  
+                  <div className="live-stat waiting">
+                    <div className="live-stat-icon">
+                      <Clock size={16} />
+                    </div>
+                    <div className="live-stat-content">
+                      <span className="live-stat-value">{stats.audioWaiting?.toLocaleString() || 0}</span>
+                      <span className="live-stat-label">Waiting</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </Link>
 
             <Link to="/text" className="feature-card-link">
-              <div className="feature-card text-card">  {/* Added text-card */}
-                <div className="feature-icon text-icon">
-                  <MessageCircle className="icon-large" />
+              <div className="feature-card text-card">
+                <div className="feature-header">
+                  <div className="feature-icon text-icon">
+                    <MessageCircle className="icon-large" />
+                  </div>
+                  <div className="live-badge">
+                    <div className="live-dot"></div>
+                    <span>LIVE</span>
+                  </div>
                 </div>
                 <h3 className="feature-title">Text Chat</h3>
                 <p className="feature-description">
                   Classic text messaging with random people. Simple and anonymous.
                 </p>
                 
-                <div className="feature-stats">
-                  <div className="stat-item">
-                    <span className="stat-value large">{stats.textPairs?.toLocaleString() || 0}</span>
-                    <span className="stat-label">Active Pairs</span>
+                {/* Modern Live Stats */}
+                <div className="live-stats-container">
+                  <div className="live-stat">
+                    <div className="live-stat-icon">
+                      <Users size={16} />
+                    </div>
+                    <div className="live-stat-content">
+                      <span className="live-stat-value">{stats.textPairs?.toLocaleString() || 0}</span>
+                      <span className="live-stat-label">Active Now</span>
+                    </div>
                   </div>
-                  <div className="stat-item waiting">
-                    <span className="stat-value medium">{stats.textWaiting?.toLocaleString() || 0}</span>
-                    <span className="stat-label">Waiting</span>
+                  
+                  <div className="live-stat waiting">
+                    <div className="live-stat-icon">
+                      <Clock size={16} />
+                    </div>
+                    <div className="live-stat-content">
+                      <span className="live-stat-value">{stats.textWaiting?.toLocaleString() || 0}</span>
+                      <span className="live-stat-label">Waiting</span>
+                    </div>
                   </div>
                 </div>
               </div>
